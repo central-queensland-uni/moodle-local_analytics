@@ -64,7 +64,7 @@ function local_analytics_trackurl() {
 }
  
 function insert_local_analytics_tracking() {
-    global $CFG,$PAGE;
+    global $CFG,$PAGE, $USER;
     $enabled = get_config('local_analytics', 'enabled');
     $siteid = get_config('local_analytics', 'siteid');
     $trackadmin = get_config('local_analytics', 'trackadmin');
@@ -83,17 +83,23 @@ function insert_local_analytics_tracking() {
     
     
     if ($enabled && (!is_siteadmin() || $trackadmin)) {
+        $urlParts = parse_url($CFG->wwwroot);
+        $domain = $urlParts['host'];
         $CFG->$location .= "   
-            <script>
-            (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-            })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-            ga('create', '".$siteid."', {'siteSpeedSampleRate': 50});
-            ga('send', ".$addition.");
-			
-            </script>
-			";
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ga('create', '".$siteid."', {
+  'siteSpeedSampleRate': 50,
+  'cookieDomain': '". $domain ."'
+});
+ga('set', '&uid', '".$USER->username."');
+ga('require', 'linkid', 'linkid.js');
+ga('send', ".$addition.");
+</script>
+";
     }
 }
 
